@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from typing import List, Optional
 
+from models import File
 from models.node import Node
 
 
@@ -11,6 +14,11 @@ class Folder(Node):
         if nodes is not None:
             self.nodes = nodes
 
+    def create_file(self, name: str) -> None:
+        pass
 
+    def open_file(self, name: str, mode: str = 'r') -> File:
+        pass
 
-
+    def delete_file(self, name: str) -> None:
+        pass
