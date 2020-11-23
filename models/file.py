@@ -29,6 +29,15 @@ class File(Node):
 
 
 class ReadableFile(File):
+    file: File
+
+    def __init__(self, file: File):
+        super().__init__(file.name, file.contents)
+        self.file = file
+
+    def read(self, start: int = 0, end: int = -1) -> None:
+        super().read(start, end)
+
     def write(self, contents: str, start: int = 0, append: bool = False) -> None:
         raise UnsupportedOperation("Not writable")
 
@@ -39,9 +48,24 @@ class ReadableFile(File):
         raise UnsupportedOperation("Not writable")
 
 
-class WriteableFile(File):
+class Writeable(File):
+    file: File
+
+    def __init__(self, file: File):
+        super().__init__(file.name, file.contents)
+        self.file = file
+
+    def write(self, contents: str, start: int = 0) -> None:
+        self.file._write(contents, start, True)
+
     def read(self, start: int = 0, end: int = -1) -> None:
         raise UnsupportedOperation("Not readable")
+
+    def move(self, start: int, end: int, target: Any) -> None:
+        self.file.move(start, end, target)
+
+    def truncate(self, end: int) -> None:
+        self.file.truncate(end)
 
 
 class Appendable(File):
@@ -53,3 +77,14 @@ class Appendable(File):
 
     def write(self, contents: str, start: int = 0) -> None:
         self.file._write(contents, start, True)
+
+    def read(self, start: int = 0, end: int = -1) -> None:
+        raise UnsupportedOperation("Not readable")
+
+    def move(self, start: int, end: int, target: Any) -> None:
+        self.file.move(start, end, target)
+
+    def truncate(self, end: int) -> None:
+        self.file.truncate(end)
+
+
