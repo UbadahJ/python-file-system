@@ -30,7 +30,7 @@ class File(Node):
         self.contents = self.contents[:end + 1]
 
 
-class ReadableFile(File):
+class Readable(File):
     file: File
 
     def __init__(self, file: File):
