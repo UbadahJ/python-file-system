@@ -11,21 +11,23 @@ class File(Node):
         super().__init__(name)
         self.contents = contents
 
-    def write(self, contents: str, start: int = 0) -> None:
+    def write(self, contents: Union[str, bytes], start: int = 0) -> None:
         self._write(contents, start)
 
     def _write(self, contents: str, start: int = 0, append: bool = False) -> None:
-        pass
+        self.contents = self.contents[:start + 1] + \
+                        contents + \
+                        self.contents[(start if append else start + len(contents)):]
 
-    def read(self, start: int = 0, end: int = -1) -> None:
-        pass
+    def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
+        return self.contents[start:] if end < 0 else self.contents[start:end]
 
     def move(self, start: int, end: int, target: Any) -> None:
         # TODO: WTH does this means
         pass
 
     def truncate(self, end: int) -> None:
-        pass
+        self.contents = self.contents[:end + 1]
 
 
 class ReadableFile(File):
@@ -35,10 +37,10 @@ class ReadableFile(File):
         super().__init__(file.name, file.contents)
         self.file = file
 
-    def read(self, start: int = 0, end: int = -1) -> None:
-        super().read(start, end)
+    def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
+        return super().read(start, end)
 
-    def write(self, contents: str, start: int = 0, append: bool = False) -> None:
+    def write(self, contents: Union[str, bytes], start: int = 0, append: bool = False) -> None:
         raise UnsupportedOperation("Not writable")
 
     def move(self, start: int, end: int, target: Any) -> None:
@@ -55,10 +57,10 @@ class Writeable(File):
         super().__init__(file.name, file.contents)
         self.file = file
 
-    def write(self, contents: str, start: int = 0) -> None:
+    def write(self, contents: Union[str, bytes], start: int = 0) -> None:
         self.file._write(contents, start, True)
 
-    def read(self, start: int = 0, end: int = -1) -> None:
+    def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
         raise UnsupportedOperation("Not readable")
 
     def move(self, start: int, end: int, target: Any) -> None:
@@ -75,10 +77,10 @@ class Appendable(File):
         super().__init__(file.name, file.contents)
         self.file = file
 
-    def write(self, contents: str, start: int = 0) -> None:
+    def write(self, contents: Union[str, bytes], start: int = 0) -> None:
         self.file._write(contents, start, True)
 
-    def read(self, start: int = 0, end: int = -1) -> None:
+    def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
         raise UnsupportedOperation("Not readable")
 
     def move(self, start: int, end: int, target: Any) -> None:
@@ -86,5 +88,3 @@ class Appendable(File):
 
     def truncate(self, end: int) -> None:
         self.file.truncate(end)
-
-
