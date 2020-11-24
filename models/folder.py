@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-from typing import List, Optional, Dict
-from types import asserttype
+from typing import Optional, Dict
 
 from models import File
 from models.file import Readable, Writeable, Appendable
 from models.node import Node
+from types import asserttype
 
 
 class Folder(Node):
+    parent: Folder
     nodes: Dict[str, Node] = {}
 
-    def __init__(self, name: str, nodes: Optional[Dict[str, Node]] = None) -> None:
+    def __init__(self, name: str, parent: Optional[Folder], nodes: Optional[Dict[str, Node]] = None) -> None:
         super().__init__(name)
+        self.parent = parent
         if nodes is not None:
             self.nodes = nodes
 
