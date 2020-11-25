@@ -67,6 +67,7 @@ class FileManager:
         if name is not None:
             log.debug(f'Creating file at {item["tags"][1]}: {name}')
             self.fs.change_directory(item['tags'][1]).create_file(name)
+            self.fs.save()
         else:
             messagebox.showerror(title='Error', message='Invalid name entered')
 
@@ -169,5 +170,9 @@ class Notepad:
         self.root.option_add('*tearOff', FALSE)
         file = Menu(self.menu)
         self.menu.add_cascade(menu=file, label='File')
-        file.add_command(label='Save')
+        file.add_command(label='Save', command=self.save_file)
         file.add_command(label='Exit', command=lambda: exit(0))
+
+    def save_file(self):
+        self.file.contents = self.text.get('1.0', 'end')
+        self.fs.save()
