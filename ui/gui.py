@@ -44,7 +44,7 @@ class Gui:
         file.add_command(label='New')
         file.add_command(label='New Folder', command=self.new_folder)
         file.add_command(label='Move')
-        file.add_command(label='Delete')
+        file.add_command(label='Delete', command=self.delete_folder)
         file.add_command(label='Exit', command=lambda: exit(0))
 
     def new_folder(self):
@@ -59,6 +59,26 @@ class Gui:
             self.fs.create_directory(item['tags'][1] + name)
         else:
             messagebox.showerror(title='Error', message='Invalid name entered')
+
+        self.tree.delete(*self.tree.get_children())
+        self.configure_tree()
+
+    def delete_folder(self):
+        if len(self.tree.selection()) < 1:
+            messagebox.showerror(title='Error', message='No folder was selected')
+            return
+
+        item = self.tree.item(self.tree.selection()[0])
+        if item["tags"][1] == '/':
+            messagebox.showerror(title='Error', message="Can't delete root folder")
+            return
+
+        log.debug(f'Deleting folder at {item["tags"][1]}')
+        try:
+            self.fs.delete_directory(item["tags"][1])
+        except IOError as e:
+            messagebox.showerror(title='Error', message=e)
+            return
 
         self.tree.delete(*self.tree.get_children())
         self.configure_tree()
