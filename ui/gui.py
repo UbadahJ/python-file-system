@@ -43,7 +43,7 @@ class FileManager:
         self.root.option_add('*tearOff', FALSE)
         file = Menu(self.menu)
         self.menu.add_cascade(menu=file, label='File')
-        file.add_command(label='New', command=self.open_notepad)
+        file.add_command(label='New', command=self.new_file)
         file.add_command(label='New Folder', command=self.new_folder)
         file.add_command(label='Move', command=self.move_folder)
         file.add_command(label='Delete', command=self.delete_folder)
@@ -56,6 +56,22 @@ class FileManager:
         parent = self.fs.change_directory('/' + path)
         if isinstance(parent.nodes[name], File):
             Notepad(Toplevel(self.root), self.fs, asserttype(File, parent.nodes[name]))
+
+    def new_file(self):
+        if len(self.tree.selection()) < 1:
+            messagebox.showerror(title='Error', message='No file was selected')
+            return
+
+        item = self.tree.item(self.tree.selection()[0])
+        name = simpledialog.askstring(title='New File', prompt='Enter new file name')
+        if name is not None:
+            log.debug(f'Creating file at {item["tags"][1]}: {name}')
+            self.fs.change_directory(item['tags'][1]).create_file(name)
+        else:
+            messagebox.showerror(title='Error', message='Invalid name entered')
+
+        self.tree.delete(*self.tree.get_children())
+        self.configure_tree()
 
     def new_folder(self):
         if len(self.tree.selection()) < 1:
