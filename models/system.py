@@ -6,6 +6,7 @@ from typing import Optional
 
 from exttypes import asserttype, notnone
 from models.folder import Folder
+from models.memory import Memory
 
 log = logging.getLogger('FileSystem')
 
@@ -59,10 +60,6 @@ class FileSystem:
             raise IOError('Not empty')
         self.save()
 
-    # TODO: Return type to be decided
-    def show_memory_map(self) -> bytes:
-        pass
-
     def save(self):
         with open('fs.dat', 'wb') as f:
             pickle.dump(self, f, 3)
@@ -109,3 +106,7 @@ class FileSystem:
             parent = self._get_folder(_path[0])
 
         return parent
+
+    @staticmethod
+    def memory_map() -> Memory:
+        return Memory('fs.dat')

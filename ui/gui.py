@@ -4,7 +4,7 @@ from tkinter import ttk, messagebox, simpledialog
 from typing import Dict
 
 from exttypes import asserttype
-from models import FileSystem, Node, Folder, File
+from models import FileSystem, Node, Folder, File, Memory
 
 log = logging.getLogger('Gui')
 
@@ -47,6 +47,8 @@ class FileManager:
         file.add_command(label='New Folder', command=self.new_folder)
         file.add_command(label='Move', command=self.move_folder)
         file.add_command(label='Delete', command=self.delete_folder)
+        file.add_separator()
+        file.add_command(label='Memory map', command=self.open_memory_map)
         file.add_command(label='Exit', command=lambda: exit(0))
 
     def open_notepad(self, event):
@@ -127,6 +129,9 @@ class FileManager:
         self.tree.delete(*self.tree.get_children())
         self.configure_tree()
 
+    def open_memory_map(self):
+        MemoryView(Toplevel(self.root), self.fs.memory_map())
+
     def _load_nodes(self, parent: Node, nodes: Dict[str, Node]):
         for _, node in nodes.items():
             log.debug(f'Inserting node {node.name} with parent {parent.name}')
@@ -176,3 +181,28 @@ class Notepad:
     def save_file(self):
         self.file.contents = self.text.get('1.0', 'end')
         self.fs.save()
+
+
+class MemoryView:
+    memory: Memory
+    root: Toplevel
+    text: Text
+
+    def __init__(self, top: Toplevel, memory: Memory) -> None:
+        self.memory = memory
+        self.root = top
+        self.text = Text(top)
+
+        self.init_view()
+
+    def init_view(self):
+        self.root.title(f'Memory View')
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        self.text.grid(column=0, row=0, sticky=(N, W, E, S))
+
+        self.text.insert('1.0', '\n'.join([
+            f'{(i * 16):08d} :: {str(p[0])[2:len(p[0]) + 2]:32}| {str(p[1])[2:len(p[1]) + 2]:18} |'
+            for i, p in enumerate(self.memory.get_map())
+        ]))
+        self.text.config(state=DISABLED)
