@@ -23,9 +23,9 @@ class File(Node):
     def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
         return self.contents[start:] if end < 0 else self.contents[start:end]
 
-    def move(self, start: int, end: int, target: Any) -> None:
-        # TODO: WTH does this means
-        pass
+    def move(self, start: int, end: int, target: int) -> None:
+        _mov = self.contents[start:end]
+        self.write(_mov, target)
 
     def truncate(self, end: int) -> None:
         self.contents = self.contents[:end + 1]
