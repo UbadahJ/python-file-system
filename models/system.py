@@ -50,8 +50,9 @@ class FileSystem:
     def delete_directory(self, path: str) -> None:
         folder = self._get_folder(path)
         if len(folder.nodes) == 0:
-            self._get_parent(path).nodes.pop(folder.name)
-
+            asserttype(Folder, folder.parent).nodes.pop(folder.name)
+        else:
+            raise IOError('Not empty')
         self.save()
 
     # TODO: Return type to be decided
