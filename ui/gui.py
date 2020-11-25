@@ -3,12 +3,13 @@ from tkinter import *
 from tkinter import ttk, messagebox, simpledialog
 from typing import Dict
 
-from models import FileSystem, Node, Folder
+from exttypes import asserttype
+from models import FileSystem, Node, Folder, File
 
 log = logging.getLogger('Gui')
 
 
-class Gui:
+class FileManager:
     fs: FileSystem
     root: Tk = Tk()
     menu: Menu = Menu(root)
@@ -33,6 +34,7 @@ class Gui:
         self.tree.heading('size', text='Size')
         self.tree.heading('type', text='Type')
         root = self.fs.root
+        self.tree.bind('<Double-1>', self.open_notepad)
         self.tree.insert('', 'end', root.path(), text='/', tags=('root', root.path()), open=True)
         self.tree.set(root.path(), 'type', 'root')
         self._load_nodes(root, root.nodes)
@@ -41,11 +43,19 @@ class Gui:
         self.root.option_add('*tearOff', FALSE)
         file = Menu(self.menu)
         self.menu.add_cascade(menu=file, label='File')
-        file.add_command(label='New')
+        file.add_command(label='New', command=self.open_notepad)
         file.add_command(label='New Folder', command=self.new_folder)
         file.add_command(label='Move', command=self.move_folder)
         file.add_command(label='Delete', command=self.delete_folder)
         file.add_command(label='Exit', command=lambda: exit(0))
+
+    def open_notepad(self, event):
+        item = self.tree.item(self.tree.selection()[0])
+        path, name = item['tags'][1][1:len(item['tags'][1]) - 1].rsplit('/', maxsplit=1)
+        log.debug(f'Opening file => {path}, {name}')
+        parent = self.fs.change_directory('/' + path)
+        if isinstance(parent.nodes[name], File):
+            Notepad(Toplevel(self.root), self.fs, asserttype(File, parent.nodes[name]))
 
     def new_folder(self):
         if len(self.tree.selection()) < 1:
@@ -109,5 +119,39 @@ class Gui:
                 self.tree.set(node.path(), 'type', 'folder')
                 self._load_nodes(node, node.nodes)
             else:
-                self.tree.insert(parent.path(), 'end', node.path(), text=node.name, tags=('file',))
+                self.tree.insert(parent.path(), 'end', node.path(), text=node.name, tags=('file', node.path()))
                 self.tree.set(node.path(), 'type', 'file')
+                self.tree.set(node.path(), 'size', f'{len(asserttype(File, node).contents)} bytes')
+
+
+class Notepad:
+    file: File
+    fs: FileSystem
+    root: Toplevel
+    menu: Menu
+    text: Text
+
+    def __init__(self, top: Toplevel, fs: FileSystem, file: File) -> None:
+        self.fs = fs
+        self.file = file
+        self.root = top
+        self.menu = Menu(self.root)
+        self.text = Text(self.root)
+        self.init_view()
+
+    def init_view(self):
+        self.root.title(f'Notepad - {self.file.name}')
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        self.root['menu'] = self.menu
+        self.text.grid(column=0, row=0, sticky=(N, W, E, S))
+
+        self.text.insert('1.0', self.file.contents)
+        self.configure_menu()
+
+    def configure_menu(self):
+        self.root.option_add('*tearOff', FALSE)
+        file = Menu(self.menu)
+        self.menu.add_cascade(menu=file, label='File')
+        file.add_command(label='Save')
+        file.add_command(label='Exit', command=lambda: exit(0))

@@ -18,7 +18,7 @@ class Folder(Node):
         self.nodes = nodes
 
     def create_file(self, name: str) -> None:
-        self.nodes[name] = File(name)
+        self.nodes[name] = File(name, self)
 
     def open_file(self, name: str, mode: str = 'r') -> File:
         try:
