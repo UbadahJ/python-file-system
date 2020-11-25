@@ -45,8 +45,8 @@ class FileManager:
         self.menu.add_cascade(menu=file, label='File')
         file.add_command(label='New', command=self.new_file)
         file.add_command(label='New Folder', command=self.new_folder)
-        file.add_command(label='Move', command=self.move_folder)
-        file.add_command(label='Delete', command=self.delete_folder)
+        file.add_command(label='Move', command=self.move)
+        file.add_command(label='Delete', command=self.delete)
         file.add_separator()
         file.add_command(label='Memory map', command=self.open_memory_map)
         file.add_command(label='Exit', command=lambda: exit(0))
@@ -92,7 +92,7 @@ class FileManager:
         self.tree.delete(*self.tree.get_children())
         self.configure_tree()
 
-    def move_folder(self):
+    def move(self):
         if len(self.tree.selection()) < 1:
             messagebox.showerror(title='Error', message='No folder was selected')
             return
@@ -102,14 +102,14 @@ class FileManager:
 
         if path is not None:
             log.debug(f'Moving folder from {item["tags"][1]} to {path}')
-            self.fs.move_directory(item['tags'][1], path)
+            self.fs.move(item['tags'][1], path)
         else:
             messagebox.showerror(title='Error', message='Invalid path')
 
         self.tree.delete(*self.tree.get_children())
         self.configure_tree()
 
-    def delete_folder(self):
+    def delete(self):
         if len(self.tree.selection()) < 1:
             messagebox.showerror(title='Error', message='No folder was selected')
             return
@@ -121,7 +121,7 @@ class FileManager:
 
         log.debug(f'Deleting folder at {item["tags"][1]}')
         try:
-            self.fs.delete_directory(item["tags"][1])
+            self.fs.delete(item["tags"][1])
         except IOError as e:
             messagebox.showerror(title='Error', message=e)
             return
