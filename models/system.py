@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 import pickle
 from typing import Optional
 
 from exttypes import asserttype, notnone
 from models.folder import Folder
+
+log = logging.getLogger('FileSystem')
 
 
 class FileSystem:
@@ -29,12 +32,15 @@ class FileSystem:
         self.current = root
 
     def change_directory(self, path: str) -> Folder:
+        log.debug(f'change_directory: path = {path}')
         self.current = self._get_folder(path)
         return self.current
 
     def create_directory(self, path: str) -> None:
+        log.debug(f'create_directory: path = {path}')
         name = path.rsplit('/', maxsplit=1)[-1]
-        self._get_parent(path).nodes[name] = Folder(name, self.current)
+        parent = self._get_parent(path)
+        parent.nodes[name] = Folder(name, parent)
         self.save()
 
     def move_directory(self, src: str, dest: str):
@@ -62,25 +68,39 @@ class FileSystem:
 
         folder: Optional[Folder] = None
         if len(path) == 0:
+            log.debug(f'_get_folder: path = {path}, returning self.root')
             return self.root
 
-        if path[0] == '/':
+        if path.startswith('/'):
             folder = self.root
             path = path[1:]
 
-        for node in path.split('/'):
-            if node == '..':
-                folder = asserttype(Folder, resolve_folder().parent)
-            elif node in resolve_folder().nodes:
-                folder = asserttype(Folder, resolve_folder().nodes[node])
-            else:
-                raise IOError("Is File")
+        log.debug(f'_get_folder: path = {path}, resolved = {resolve_folder().path()}')
+        for node in [i for i in path.split('/') if i != '']:
+            try:
+                if node == '..':
+                    folder = asserttype(Folder, resolve_folder().parent)
+                elif node in resolve_folder().nodes:
+                    folder = asserttype(Folder, resolve_folder().nodes[node])
+                else:
+                    raise IOError(f"{path} Not found")
+            except AssertionError:
+                raise IOError(f"Is File")
 
         return notnone(folder)
 
-    def _get_parent(self, path) -> Folder:
-        parent = self.current
-        if len(path.rsplit('/', maxsplit=1)) > 1:
-            parent = self._get_folder(path.rsplit('/', maxsplit=1)[0])
+    def _get_parent(self, path: str) -> Folder:
+        parent = self.root if path.startswith('/') else self.current
+        log.debug(f'_get_parent: path = {path}, parent = {parent.path()}')
+
+        _path = path.rsplit('/', maxsplit=1)
+        if path.startswith('/'):
+            if path.count('/') == 1:
+                return self.root
+
+            _path[0] = '/' + _path[0]
+
+        if len(_path) > 1:
+            parent = self._get_folder(_path[0])
 
         return parent
