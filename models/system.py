@@ -23,7 +23,7 @@ class FileSystem:
 
         return fs
 
-    def __init__(self, root: Folder):
+    def __init__(self, root: Folder) -> None:
         self.root = root
         self.current = root
 
