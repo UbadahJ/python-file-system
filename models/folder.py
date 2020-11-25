@@ -2,19 +2,16 @@ from __future__ import annotations
 
 from typing import Optional, Dict
 
-from models import File
-from models.file import Readable, Writeable, Appendable
-from models.node import Node
 from exttypes import asserttype
+from models.file import File, Readable, Writeable, Appendable
+from models.node import Node
 
 
 class Folder(Node):
-    parent: Folder
     nodes: Dict[str, Node]
 
     def __init__(self, name: str, parent: Optional[Folder], nodes: Optional[Dict[str, Node]] = None) -> None:
-        super().__init__(name)
-        self.parent = parent
+        super().__init__(name, parent)
         if nodes is None:
             nodes = {}
 

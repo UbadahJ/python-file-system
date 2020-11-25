@@ -1,14 +1,15 @@
 from io import UnsupportedOperation
 from typing import Union, Any
 
+from exttypes import asserttype
 from models.node import Node
 
 
 class File(Node):
     contents: Union[bytes, str]
 
-    def __init__(self, name: str, contents: Union[bytes, str] = "") -> None:
-        super().__init__(name)
+    def __init__(self, name: str, parent: Node, contents: Union[bytes, str] = "") -> None:
+        super().__init__(name, parent)
         self.contents = contents
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:
@@ -34,7 +35,7 @@ class Readable(File):
     file: File
 
     def __init__(self, file: File):
-        super().__init__(file.name, file.contents)
+        super().__init__(file.name, file.parent, file.contents)
         self.file = file
 
     def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
@@ -54,7 +55,7 @@ class Writeable(File):
     file: File
 
     def __init__(self, file: File):
-        super().__init__(file.name, file.contents)
+        super().__init__(file.name, file.parent, file.contents)
         self.file = file
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:
@@ -74,7 +75,7 @@ class Appendable(File):
     file: File
 
     def __init__(self, file: File):
-        super().__init__(file.name, file.contents)
+        super().__init__(file.name, file.parent, file.contents)
         self.file = file
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:

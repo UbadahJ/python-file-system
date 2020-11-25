@@ -61,10 +61,17 @@ class FileSystem:
             return self.current if folder is None else folder
 
         folder: Optional[Folder] = None
+        if len(path) == 0:
+            return self.root
+
+        if path[0] == '/':
+            folder = self.root
+            path = path[1:]
+
         for node in path.split('/'):
             if node == '..':
-                folder = resolve_folder().parent
-            elif node in self.current.nodes:
+                folder = asserttype(Folder, resolve_folder().parent)
+            elif node in resolve_folder().nodes:
                 folder = asserttype(Folder, resolve_folder().nodes[node])
             else:
                 raise IOError("Is File")
