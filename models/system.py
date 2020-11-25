@@ -44,7 +44,11 @@ class FileSystem:
         self.save()
 
     def move_directory(self, src: str, dest: str):
-        self._get_folder(src).parent = self._get_folder(dest)
+        log.debug(f'move_directory: src = {src} => dest = {dest}')
+        _src, _dest = self._get_folder(src), self._get_folder(dest)
+        asserttype(Folder, _src.parent).nodes.pop(_src.name)
+        _src.parent = _dest
+        _dest.nodes[_src.name] = _src
         self.save()
 
     def delete_directory(self, path: str) -> None:

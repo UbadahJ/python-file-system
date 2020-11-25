@@ -43,7 +43,7 @@ class Gui:
         self.menu.add_cascade(menu=file, label='File')
         file.add_command(label='New')
         file.add_command(label='New Folder', command=self.new_folder)
-        file.add_command(label='Move')
+        file.add_command(label='Move', command=self.move_folder)
         file.add_command(label='Delete', command=self.delete_folder)
         file.add_command(label='Exit', command=lambda: exit(0))
 
@@ -59,6 +59,23 @@ class Gui:
             self.fs.create_directory(item['tags'][1] + name)
         else:
             messagebox.showerror(title='Error', message='Invalid name entered')
+
+        self.tree.delete(*self.tree.get_children())
+        self.configure_tree()
+
+    def move_folder(self):
+        if len(self.tree.selection()) < 1:
+            messagebox.showerror(title='Error', message='No folder was selected')
+            return
+
+        item = self.tree.item(self.tree.selection()[0])
+        path = simpledialog.askstring(title='Destination', prompt='Enter new destination')
+
+        if path is not None:
+            log.debug(f'Moving folder from {item["tags"][1]} to {path}')
+            self.fs.move_directory(item['tags'][1], path)
+        else:
+            messagebox.showerror(title='Error', message='Invalid path')
 
         self.tree.delete(*self.tree.get_children())
         self.configure_tree()
@@ -87,7 +104,8 @@ class Gui:
         for _, node in nodes.items():
             log.debug(f'Inserting node {node.name} with parent {parent.name}')
             if isinstance(node, Folder):
-                self.tree.insert(parent.path(), 'end', node.path(), text=node.name, tags=('folder', node.path()), open=True)
+                self.tree.insert(parent.path(), 'end', node.path(), text=node.name, tags=('folder', node.path()),
+                                 open=True)
                 self.tree.set(node.path(), 'type', 'folder')
                 self._load_nodes(node, node.nodes)
             else:
