@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional, Dict
 
 from exttypes import asserttype
-from models.file import File, Readable, Writeable, Appendable
+from models.file import File, Readable, Writeable, Appendable, Hybrid
 from models.node import Node
 
 
@@ -30,9 +30,9 @@ class Folder(Node):
                 elif mode == 'a':
                     return Appendable(Writeable(asserttype(File, self.nodes[name])))
                 elif mode == 'rw':
-                    return asserttype(File, self.nodes[name])
+                    return Hybrid(asserttype(File, self.nodes[name]))
                 elif mode == 'ra':
-                    return Appendable(asserttype(File, self.nodes[name]))
+                    return Appendable(Hybrid(asserttype(File, self.nodes[name])))
         except AssertionError:
             raise IOError("Is directory")
 

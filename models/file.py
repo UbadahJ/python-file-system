@@ -1,7 +1,7 @@
+from abc import abstractmethod
 from io import UnsupportedOperation
-from typing import Union, Any
+from typing import Union, Any, Optional
 
-from exttypes import asserttype
 from models.node import Node
 
 
@@ -30,9 +30,13 @@ class File(Node):
     def truncate(self, end: int) -> None:
         self.contents = self.contents[:end + 1]
 
+    @abstractmethod
+    def close(self):
+        ...
+
 
 class Readable(File):
-    file: File
+    file: Optional[File]
 
     def __init__(self, file: File):
         super().__init__(file.name, file.parent, file.contents)
@@ -50,9 +54,12 @@ class Readable(File):
     def truncate(self, end: int) -> None:
         raise UnsupportedOperation("Not writable")
 
+    def close(self):
+        self.file = None
+
 
 class Writeable(File):
-    file: File
+    file: Optional[File]
 
     def __init__(self, file: File):
         super().__init__(file.name, file.parent, file.contents)
@@ -69,10 +76,13 @@ class Writeable(File):
 
     def truncate(self, end: int) -> None:
         self.file.truncate(end)
+
+    def close(self):
+        self.file = None
 
 
 class Appendable(File):
-    file: File
+    file: Optional[File]
 
     def __init__(self, file: File):
         super().__init__(file.name, file.parent, file.contents)
@@ -89,3 +99,32 @@ class Appendable(File):
 
     def truncate(self, end: int) -> None:
         self.file.truncate(end)
+
+    def close(self):
+        self.file = None
+
+
+class Hybrid(File):
+    file: Optional[File]
+
+    def __init__(self, file: File):
+        super().__init__(file.name, file.parent, file.contents)
+        self.file = file
+
+    def write(self, contents: Union[str, bytes], start: int = 0) -> None:
+        self.file.write(contents, start)
+
+    def _write(self, contents: str, start: int = 0, append: bool = False) -> None:
+        self.file._write(contents, start, append)
+
+    def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
+        return self.file.read(start, end)
+
+    def move(self, start: int, end: int, target: int) -> None:
+        self.file.move(start, end, target)
+
+    def truncate(self, end: int) -> None:
+        self.file.truncate(end)
+
+    def close(self):
+        self.file = None
