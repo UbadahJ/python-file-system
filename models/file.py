@@ -43,7 +43,7 @@ class Readable(File):
         self.file = file
 
     def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
-        return super().read(start, end)
+        return self.file.read(start, end)
 
     def write(self, contents: Union[str, bytes], start: int = 0, append: bool = False) -> None:
         raise UnsupportedOperation("Not writable")

@@ -176,10 +176,23 @@ class Notepad:
         file = Menu(self.menu)
         self.menu.add_cascade(menu=file, label='File')
         file.add_command(label='Save', command=self.save_file)
+        file.add_command(label='Truncate', command=self.truncate)
         file.add_command(label='Exit', command=lambda: exit(0))
 
     def save_file(self):
         self.file.contents = self.text.get('1.0', 'end')
+        self.fs.save()
+
+    def truncate(self):
+        size = simpledialog.askinteger(title='Number of bytes', prompt='Enter number of bytes')
+        if size is not None and int(size) < len(self.file.contents):
+            log.debug(f'Truncating file: {self.file.name}')
+            self.file.truncate(int(size))
+            self.text.delete('1.0', 'end')
+            self.text.insert('1.0', self.file.contents)
+        else:
+            messagebox.showerror(title='Error', message='Invalid number entered')
+
         self.fs.save()
 
 
@@ -202,7 +215,7 @@ class MemoryView:
         self.text.grid(column=0, row=0, sticky=(N, W, E, S))
 
         self.text.insert('1.0', '\n'.join([
-            f'{(i * 16):08d} :: {str(p[0])[2:len(p[0]) + 2]:32}| {str(p[1])[2:len(p[1]) + 2]:18} |'
+            f'{(i * 8):08d} :: {str(p[0])[2:len(p[0]) + 2]:32}| {str(p[1])[2:len(p[1]) + 2]:18} |'
             for i, p in enumerate(self.memory.get_map())
         ]))
         self.text.config(state=DISABLED)

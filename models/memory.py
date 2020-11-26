@@ -13,7 +13,6 @@ class Memory:
 
     def get_map(self) -> List[Tuple[bytes, bytes]]:
         _l: List[Tuple[bytes, bytes]]
-        _s: int = getsize(self.file)
         with open(self.file, 'rb') as f:
             _l = [
                 (hexlify(c, sep=' '), b2a_qp(c))
