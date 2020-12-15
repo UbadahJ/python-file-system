@@ -66,7 +66,7 @@ class Writeable(File):
         self.file = file
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:
-        self.file._write(contents, start, True)
+        self.file._write(contents, start)
 
     def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
         raise UnsupportedOperation("Not readable")
