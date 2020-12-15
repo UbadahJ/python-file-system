@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from threading import Lock
+
+
 class Node:
     name: str
     parent: Node
+    lock: Lock = Lock()
 
     def __init__(self, name: str, parent: Node) -> None:
         super().__init__()
