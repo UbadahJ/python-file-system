@@ -22,17 +22,21 @@ class Folder(Node):
 
     def open_file(self, name: str, mode: str = 'r') -> File:
         try:
-            if name in self.nodes:
-                if mode == 'r':
+            if mode == 'r':
+                if name in self.nodes:
                     return Readable(asserttype(File, self.nodes[name]))
-                elif mode == 'w':
-                    return Writeable(asserttype(File, self.nodes[name]))
-                elif mode == 'a':
-                    return Appendable(Writeable(asserttype(File, self.nodes[name])))
-                elif mode == 'rw':
-                    return Hybrid(asserttype(File, self.nodes[name]))
-                elif mode == 'ra':
-                    return Appendable(Hybrid(asserttype(File, self.nodes[name])))
+
+                raise IOError("No such file")
+
+            self.create_file(name)
+            if mode == 'w':
+                return Writeable(asserttype(File, self.nodes[name]))
+            elif mode == 'a':
+                return Appendable(Writeable(asserttype(File, self.nodes[name])))
+            elif mode == 'rw':
+                return Hybrid(asserttype(File, self.nodes[name]))
+            elif mode == 'ra':
+                return Appendable(Hybrid(asserttype(File, self.nodes[name])))
         except AssertionError:
             raise IOError("Is directory")
 
