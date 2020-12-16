@@ -17,6 +17,21 @@ class CreateFile(Statement):
         pass
 
 
+class DeleteFile(Statement):
+    command: str = 'delete'
+
+    def initialize(self) -> None:
+        pass
+
+    def execute(self) -> None:
+        if self.args[0] in [
+            f.name
+            for f in _file_store
+        ]: raise StatementError(self, "File is opened")
+
+        self.fs.current.delete_file(self.args[0])
+
+
 class OpenFile(Statement):
     src: File
     command: str = 'open'

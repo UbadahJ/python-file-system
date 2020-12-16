@@ -30,6 +30,7 @@ class Interpreter:
     def parse(self, statement: str) -> Statement:
         factories: List[Type[Statement]] = [
             CreateFile,
+            DeleteFile,
             OpenFile,
             WriteToFile,
             CloseFile,
