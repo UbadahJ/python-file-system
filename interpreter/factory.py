@@ -9,9 +9,7 @@ _file_store: List[File] = []
 
 class OpenFile(Statement):
     src: File
-
-    def command(self) -> str:
-        return 'open'
+    command: str = 'open'
 
     def initialize(self) -> None:
         try:
@@ -30,9 +28,7 @@ class OpenFile(Statement):
 
 class MemoryMap(Statement):
     map: Memory
-
-    def command(self) -> str:
-        return 'show_memory_map'
+    command: str = 'show_memory_map'
 
     def initialize(self) -> None:
         self.map = super().fs.memory_map()
@@ -43,9 +39,7 @@ class MemoryMap(Statement):
 
 class CloseFile(Statement):
     name: str
-
-    def command(self) -> str:
-        return 'close'
+    command: str = 'close'
 
     def initialize(self) -> None:
         try:
@@ -69,9 +63,7 @@ class CloseFile(Statement):
 class WriteToFile(Statement):
     src: File
     contents: str
-
-    def command(self) -> str:
-        return 'write_to_file'
+    command: str = 'write_to_file'
 
     def initialize(self) -> None:
         name: str

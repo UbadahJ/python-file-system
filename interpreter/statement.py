@@ -12,6 +12,7 @@ class Statement(ABC):
         self.statement = statement
         self.initialize()
 
+    @property
     @abstractmethod
     def command(self) -> str: ...
 
