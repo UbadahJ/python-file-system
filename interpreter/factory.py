@@ -1,10 +1,20 @@
 from typing import List
 
-from interpreter.exception import InvalidStatement
+from interpreter.exception import StatementError
 from interpreter.statement import Statement
 from models import File
 
 _file_store: List[File] = []
+
+
+class CreateFile(Statement):
+    command: str = 'create'
+
+    def initialize(self) -> None:
+        self.fs.current.create_file(self.args[0])
+
+    def execute(self) -> None:
+        pass
 
 
 class OpenFile(Statement):
@@ -15,9 +25,9 @@ class OpenFile(Statement):
         try:
             self.src = self.fs.current.open_file(*self.args)
         except AssertionError as e:
-            raise InvalidStatement(self, *e.args)
+            raise StatementError(self, *e.args)
         except:
-            raise InvalidStatement(self, "Invalid arguments")
+            raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
         self.src.lock.acquire()
@@ -44,13 +54,13 @@ class CloseFile(Statement):
         try:
             self.name = self.args[0]
         except:
-            raise InvalidStatement(self, "Invalid arguments")
+            raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
         global _file_store
         self.pprint(f'Closing {self.name}', is_log=True)
         if self.name not in map(lambda x: x.name, _file_store):
-            raise InvalidStatement(self, "No such file opened")
+            raise StatementError(self, "No such file opened")
         _file_store = [
             f
             for f in _file_store
@@ -65,9 +75,12 @@ class WriteToFile(Statement):
 
     def initialize(self) -> None:
         try:
-            self.name, self.contents = self.args[0], ' '.join(self.args[1:])
+            self.name, self.contents = self.args[0], ' '.join([
+                i.strip('"').strip()
+                for i in self.args[1:]
+            ])
         except:
-            raise InvalidStatement(self, "Invalid arguments")
+            raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
         _f_map = {
@@ -75,7 +88,7 @@ class WriteToFile(Statement):
             for f in _file_store
         }
         if self.name not in _f_map:
-            raise InvalidStatement(self, "No such file opened")
+            raise StatementError(self, "No such file opened")
 
         src = _f_map[self.name]
 
@@ -83,4 +96,3 @@ class WriteToFile(Statement):
         self.pprint(f'Writing to {src.name}', is_log=True)
         src.write(self.contents)
         src.lock.release()
-
