@@ -75,7 +75,7 @@ class CloseFile(Statement):
 class WriteToFile(Statement):
     name: str
     contents: str
-    start: Optional[int]
+    start: Optional[int] = None
     command: str = 'write_to_file'
 
     def initialize(self) -> None:
@@ -100,4 +100,33 @@ class WriteToFile(Statement):
         self.pprint(f'Writing to {src.name}', is_log=True)
         if self.start is not None:
             src.write(self.contents, start=self.start)
+        else:
+            src.write(self.contents)
+        src.lock.release()
+
+
+class TruncateFile(Statement):
+    name: str
+    end: int
+    command: str = 'truncate'
+
+    def initialize(self) -> None:
+        try:
+            self.name, self.end = self.args[0], int(self.args[1].strip())
+        except:
+            raise StatementError(self, "Invalid arguments")
+
+    def execute(self) -> None:
+        _f_map = {
+            f.name: f
+            for f in _file_store
+        }
+        if self.name not in _f_map:
+            raise StatementError(self, "No such file opened")
+
+        src: File = _f_map[self.name]
+
+        src.lock.acquire()
+        self.pprint(f'Writing to {src.name}', is_log=True)
+        src.truncate(self.end)
         src.lock.release()

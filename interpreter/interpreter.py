@@ -33,6 +33,7 @@ class Interpreter:
             OpenFile,
             WriteToFile,
             CloseFile,
+            TruncateFile,
             MemoryMap
         ]
 
