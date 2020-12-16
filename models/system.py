@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import logging
 import pickle
+from threading import Lock
 from typing import Optional
 
 from exttypes import asserttype, notnone
@@ -16,6 +17,7 @@ log = logging.getLogger('FileSystem')
 class FileSystem:
     root: Folder
     current: Folder
+    lock: Lock = Lock()
 
     @staticmethod
     def load() -> FileSystem:

@@ -29,6 +29,10 @@ class Interpreter:
 
     def parse(self, statement: str) -> Statement:
         factories: List[Type[Statement]] = [
+            CreateFolder,
+            DeleteFolder,
+            ChangeFolder,
+            Move,
             CreateFile,
             DeleteFile,
             OpenFile,
@@ -51,4 +55,7 @@ class Interpreter:
                 s.execute()
             except StatementError as e:
                 print(f'Error at line {i}: {e.msg}\n{e.statement.statement}', file=self.out)
+                exit(1)
+            except OSError as e:
+                print(f'Error at line {i}: {e}\n{s.statement}', file=self.out)
                 exit(1)

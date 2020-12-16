@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from time import sleep
 from typing import Optional, List, TextIO
 
 from models import FileSystem
@@ -24,13 +25,16 @@ class Statement(ABC):
 
     @property
     @abstractmethod
-    def command(self) -> str: ...
+    def command(self) -> str:
+        ...
 
     @abstractmethod
-    def initialize(self) -> None: ...
+    def initialize(self) -> None:
+        ...
 
     @abstractmethod
-    def execute(self) -> None: ...
+    def execute(self) -> None:
+        ...
 
     def pprint(self, *args, is_log=False, sep=' ', end='\n'):
         if self.out is not None:
@@ -38,3 +42,9 @@ class Statement(ABC):
                 return
 
             print(*args, sep=sep, end=end, file=self.out)
+
+
+class FileStatement(Statement, ABC):
+    def execute(self) -> None:
+        while self.fs.lock.locked():
+            sleep(0.1)

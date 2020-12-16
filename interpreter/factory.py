@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict
 
 from interpreter.exception import StatementError
-from interpreter.statement import Statement
+from interpreter.statement import Statement, FileStatement
 from models import File
 from models.file import Readable, Hybrid
 
@@ -19,23 +19,77 @@ def _open_file(statement: Statement, name: str) -> File:
     return _f_map[name]
 
 
-class CreateFile(Statement):
+class CreateFolder(Statement):
+    command: str = 'mkdir'
+
+    def initialize(self) -> None:
+        if len(self.args) != 1:
+            raise StatementError(self, "Invalid name")
+
+    def execute(self) -> None:
+        self.fs.lock.acquire()
+        self.fs.create_directory(self.args[0])
+        self.fs.lock.release()
+
+
+class DeleteFolder(Statement):
+    command: str = 'rmdir'
+
+    def initialize(self) -> None:
+        if len(self.args) != 1:
+            raise StatementError(self, "Invalid name")
+
+    def execute(self) -> None:
+        self.fs.lock.acquire()
+        self.fs.delete(self.args[0])
+        self.fs.lock.release()
+
+
+class ChangeFolder(Statement):
+    command: str = 'chdir'
+
+    def initialize(self) -> None:
+        if len(self.args) != 1:
+            raise StatementError(self, "Invalid name")
+
+    def execute(self) -> None:
+        self.fs.lock.acquire()
+        self.fs.change_directory(self.args[0])
+        self.fs.lock.release()
+
+
+class Move(Statement):
+    command: str = 'move'
+
+    def initialize(self) -> None:
+        if len(self.args) != 2:
+            raise StatementError(self, "Invalid arguments")
+
+    def execute(self) -> None:
+        self.fs.lock.acquire()
+        self.fs.move(self.args[0], self.args[1])
+        self.fs.lock.release()
+
+
+class CreateFile(FileStatement):
     command: str = 'create'
 
     def initialize(self) -> None:
-        self.fs.current.create_file(self.args[0])
-
-    def execute(self) -> None:
         pass
 
+    def execute(self) -> None:
+        super().execute()
+        self.fs.current.create_file(self.args[0])
 
-class DeleteFile(Statement):
+
+class DeleteFile(FileStatement):
     command: str = 'delete'
 
     def initialize(self) -> None:
         pass
 
     def execute(self) -> None:
+        super().execute()
         if self.args[0] in [
             f.name
             for f in _file_store
@@ -44,26 +98,29 @@ class DeleteFile(Statement):
         self.fs.current.delete_file(self.args[0])
 
 
-class OpenFile(Statement):
-    src: File
+class OpenFile(FileStatement):
+    name: str
+    mode: str
     command: str = 'open'
 
     def initialize(self) -> None:
         try:
-            self.src = self.fs.current.open_file(*self.args)
+            self.name, self.mode = self.args
         except AssertionError as e:
             raise StatementError(self, *e.args)
         except:
             raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
-        self.src.lock.acquire()
-        self.pprint(f'Opening {self.src.name} as {type(self.src)}', is_log=True)
-        _file_store.append(self.src)
-        self.src.lock.release()
+        super().execute()
+        src = self.fs.current.open_file(self.name, self.mode)
+        src.lock.acquire()
+        self.pprint(f'Opening {src.name} as {type(src)}', is_log=True)
+        _file_store.append(src)
+        src.lock.release()
 
 
-class CloseFile(Statement):
+class CloseFile(FileStatement):
     name: str
     command: str = 'close'
 
@@ -74,6 +131,7 @@ class CloseFile(Statement):
             raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
+        super().execute()
         global _file_store
         self.pprint(f'Closing {self.name}', is_log=True)
         if self.name not in map(lambda x: x.name, _file_store):
@@ -85,7 +143,7 @@ class CloseFile(Statement):
         ]
 
 
-class ReadFile(Statement):
+class ReadFile(FileStatement):
     name: str
     start: int = 0
     size: int = -1
@@ -102,6 +160,7 @@ class ReadFile(Statement):
             raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
+        super().execute()
         src: File = _open_file(self, self.name)
         src.lock.acquire()
         self.pprint(f'Reading from {src.name}', is_log=True)
@@ -112,7 +171,7 @@ class ReadFile(Statement):
         src.lock.release()
 
 
-class WriteToFile(Statement):
+class WriteToFile(FileStatement):
     name: str
     contents: str
     start: Optional[int] = None
@@ -127,6 +186,7 @@ class WriteToFile(Statement):
             raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
+        super().execute()
         src: File = _open_file(self, self.name)
         src.lock.acquire()
         self.pprint(f'Writing to {src.name}', is_log=True)
@@ -141,7 +201,7 @@ class WriteToFile(Statement):
         src.lock.release()
 
 
-class TruncateFile(Statement):
+class TruncateFile(FileStatement):
     name: str
     end: int
     command: str = 'truncate'
@@ -153,6 +213,7 @@ class TruncateFile(Statement):
             raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
+        super().execute()
         src: File = _open_file(self, self.name)
         src.lock.acquire()
         self.pprint(f'Writing to {src.name}', is_log=True)
@@ -160,13 +221,14 @@ class TruncateFile(Statement):
         src.lock.release()
 
 
-class MemoryMap(Statement):
+class MemoryMap(FileStatement):
     command: str = 'show_memory_map'
 
     def initialize(self) -> None:
         pass
 
     def execute(self) -> None:
+        super().execute()
         _m = self.fs.memory_map().get_formatted_string()
         l = len(_m.split('\n')[0])
         self.pprint('-' * l)
