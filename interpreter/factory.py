@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from interpreter.exception import StatementError
 from interpreter.statement import Statement
@@ -75,14 +75,14 @@ class CloseFile(Statement):
 class WriteToFile(Statement):
     name: str
     contents: str
+    start: Optional[int]
     command: str = 'write_to_file'
 
     def initialize(self) -> None:
         try:
-            self.name, self.contents = self.args[0], ' '.join([
-                i.strip('"').strip()
-                for i in self.args[1:]
-            ])
+            self.name, self.contents = self.args[0], self.args[1].strip('"').strip()
+            if len(self.args) > 2:
+                self.start = int(self.args[2])
         except:
             raise StatementError(self, "Invalid arguments")
 
@@ -98,5 +98,6 @@ class WriteToFile(Statement):
 
         src.lock.acquire()
         self.pprint(f'Writing to {src.name}', is_log=True)
-        src.write(self.contents)
+        if self.start is not None:
+            src.write(self.contents, start=self.start)
         src.lock.release()
