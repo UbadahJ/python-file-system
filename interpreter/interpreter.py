@@ -10,15 +10,12 @@ class Interpreter:
     fs: FileSystem
     src: TextIO
     out: TextIO
-    threads: int
     log: bool
     statements: List[Statement]
 
-    def __init__(self, fs: FileSystem, src: TextIO, out: TextIO = sys.stdout, log: bool = False,
-                 threads: int = 4) -> None:
+    def __init__(self, fs: FileSystem, src: TextIO, out: TextIO = sys.stdout, log: bool = False) -> None:
         self.fs = fs
         self.src = src
-        self.threads = threads
         self.out = out
         self.log = log
         self.statements = []
