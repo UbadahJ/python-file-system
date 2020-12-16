@@ -28,7 +28,7 @@ class File(Node):
         self.write(_mov, target)
 
     def truncate(self, end: int) -> None:
-        self.contents = self.contents[:end + 1]
+        self.contents = self.contents[:end]
 
     @abstractmethod
     def close(self):
