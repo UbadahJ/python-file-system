@@ -214,8 +214,5 @@ class MemoryView:
         self.root.rowconfigure(0, weight=1)
         self.text.grid(column=0, row=0, sticky=(N, W, E, S))
 
-        self.text.insert('1.0', '\n'.join([
-            f'{(i * 8):08d} :: {str(p[0])[2:len(p[0]) + 2]:32}| {str(p[1])[2:len(p[1]) + 2]:18} |'
-            for i, p in enumerate(self.memory.get_map())
-        ]))
+        self.text.insert('1.0', self.memory.get_formatted_string())
         self.text.config(state=DISABLED)

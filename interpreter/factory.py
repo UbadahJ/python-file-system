@@ -22,6 +22,7 @@ class OpenFile(Statement):
 
     def execute(self) -> None:
         self.src.lock.acquire()
+        self.pprint(f'Opening {self.src.name} as {type(self.src)}', is_log=True)
         _file_store.append(self.src)
         self.src.lock.release()
 
@@ -34,7 +35,7 @@ class MemoryMap(Statement):
         self.map = super().fs.memory_map()
 
     def execute(self) -> None:
-        self.map.get_map()
+        self.pprint(self.map.get_formatted_string())
 
 
 class CloseFile(Statement):
@@ -53,6 +54,7 @@ class CloseFile(Statement):
 
     def execute(self) -> None:
         global _file_store
+        self.pprint(f'Closing {self.name}', is_log=True)
         _file_store = [
             f
             for f in _file_store
@@ -84,6 +86,7 @@ class WriteToFile(Statement):
 
     def execute(self) -> None:
         self.src.lock.acquire()
+        self.pprint(f'Writing to {self.src.name}', is_log=True)
         self.src.write(self.contents)
         self.src.lock.release()
 

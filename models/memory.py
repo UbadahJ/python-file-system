@@ -20,3 +20,9 @@ class Memory:
             ]
 
         return _l
+
+    def get_formatted_string(self):
+        return '\n'.join([
+            f'{(i * 8):08d} :: {str(p[0])[2:len(p[0]) + 2]:32}| {str(p[1])[2:len(p[1]) + 2]:18} |'
+            for i, p in enumerate(self.map.get_map())
+        ])
