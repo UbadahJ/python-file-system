@@ -13,7 +13,7 @@ class StatementError(SyntaxError):
 
 
 class InterpretionError(SyntaxError):
-    statstrement: str
+    statement: str
 
     def __init__(self, statement: str, *args: object) -> None:
         super().__init__(*args)

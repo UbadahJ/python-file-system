@@ -43,7 +43,11 @@ class MemoryMap(Statement):
         pass
 
     def execute(self) -> None:
-        self.pprint(self.fs.memory_map().get_formatted_string())
+        _m = self.fs.memory_map().get_formatted_string()
+        l = len(_m.split('\n')[0])
+        self.pprint('-' * l)
+        self.pprint(_m)
+        self.pprint('-' * l)
 
 
 class CloseFile(Statement):

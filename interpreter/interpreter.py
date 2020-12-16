@@ -1,6 +1,5 @@
 import sys
-from io import TextIOBase
-from typing import Type
+from typing import Type, TextIO
 
 from interpreter.exception import InterpretionError
 from interpreter.factory import *
@@ -9,13 +8,13 @@ from models import FileSystem
 
 class Interpreter:
     fs: FileSystem
-    src: TextIOBase
-    out: TextIOBase
+    src: TextIO
+    out: TextIO
     threads: int
     log: bool
     statements: List[Statement]
 
-    def __init__(self, fs: FileSystem, src: TextIOBase, out: TextIOBase = sys.stdout, log: bool = False,
+    def __init__(self, fs: FileSystem, src: TextIO, out: TextIO = sys.stdout, log: bool = False,
                  threads: int = 4) -> None:
         self.fs = fs
         self.src = src

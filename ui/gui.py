@@ -1,9 +1,12 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
 from tkinter import *
 from tkinter import ttk, messagebox, simpledialog
-from typing import Dict
+from typing import Dict, Optional, List, Callable
 
 from exttypes import asserttype
+from interpreter.interpreter import Interpreter
 from models import FileSystem, Node, Folder, File, Memory
 
 log = logging.getLogger('Gui')
@@ -49,6 +52,7 @@ class FileManager:
         file.add_command(label='Delete', command=self.delete)
         file.add_separator()
         file.add_command(label='Memory map', command=self.open_memory_map)
+        file.add_command(label='Interpreter', command=self.open_interpreter)
         file.add_command(label='Exit', command=lambda: exit(0))
 
     def open_notepad(self, event):
@@ -131,6 +135,13 @@ class FileManager:
 
     def open_memory_map(self):
         MemoryView(Toplevel(self.root), self.fs.memory_map())
+
+    def open_interpreter(self):
+        def _clean() -> None:
+            self.tree.delete(*self.tree.get_children())
+            self.configure_tree()
+
+        InterpreterView(Toplevel(self.root), self.fs, _clean)
 
     def _load_nodes(self, parent: Node, nodes: Dict[str, Node]):
         for _, node in nodes.items():
@@ -216,3 +227,60 @@ class MemoryView:
 
         self.text.insert('1.0', self.memory.get_formatted_string())
         self.text.config(state=DISABLED)
+
+
+class InterpreterView:
+    fs: FileSystem
+    root: Toplevel
+    text: Text
+    interpreters: List[Interpreter]
+    on_complete: Optional[Callable[[None], None]] = None
+
+    def __init__(self, top: Toplevel, fs: FileSystem, on_complete: Optional[Callable[[None], None]] = None) -> None:
+        self.fs = fs
+        self.root = top
+        self.text = Text(top)
+        self.on_complete = on_complete
+
+        contents: Optional[str] = simpledialog.askstring(
+            title='Open', prompt='Enter files separated by comma\nEach file is executed in new thread'
+        )
+        if contents is None or contents == '':
+            self.root.destroy()
+            return
+
+        files = [
+            (StringIO(), open(file.strip(), 'r'))
+            for file in contents.split(',')
+        ]
+        self.interpreters = [
+            Interpreter(self.fs, file, out=io)
+            for io, file in files
+        ]
+
+        self.init_view()
+        self.launch_threads()
+
+    def init_view(self) -> None:
+        self.root.title(f'Interpreter')
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        self.text.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.text['font'] = ("Monospace", 10, "normal")
+        self.text['state'] = DISABLED
+
+    def launch_threads(self) -> None:
+        with ThreadPoolExecutor(max_workers=len(self.interpreters)) as executor:
+            executor.map(lambda x: x.launch(), self.interpreters)
+
+        self.text['state'] = NORMAL
+        for index, i in enumerate(self.interpreters, start=1):
+            self.text.insert('end', f'Thread {index}\n')
+            i.out.seek(0)
+            self.text.insert('end', f'{i.out.read()}')
+            self.text.insert('end', f'End of thread {index}\n')
+
+        self.text['state'] = DISABLED
+
+        if self.on_complete is not None:
+            self.on_complete()
