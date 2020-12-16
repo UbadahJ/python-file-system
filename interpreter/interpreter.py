@@ -1,3 +1,4 @@
+from io import TextIOBase
 from typing import Type
 
 from models import FileSystem
@@ -6,19 +7,18 @@ from factory import *
 
 class Interpreter:
     fs: FileSystem
-    src: str
+    src: TextIOBase
     threads: int
     statements: List[Statement]
 
-    def __init__(self, fs: FileSystem, src: str, threads: int = 4):
+    def __init__(self, fs: FileSystem, src: TextIOBase, threads: int = 4) -> None:
         self.fs = fs
         self.src = src
         self.threads = threads
-        with open(self.src) as f:
-            self.statements = [
-                self.parse(line.strip())
-                for line in f.readlines()
-            ]
+        self.statements = [
+            self.parse(line.strip())
+            for line in self.src.readlines()
+        ]
 
     def parse(self, statement: str) -> Statement:
         factories: List[Type[Statement]] = [
