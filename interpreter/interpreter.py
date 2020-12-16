@@ -2,8 +2,8 @@ import sys
 from io import TextIOBase
 from typing import Type
 
-from models import FileSystem
 from interpreter.factory import *
+from models import FileSystem
 
 
 class Interpreter:
@@ -11,13 +11,16 @@ class Interpreter:
     src: TextIOBase
     out: TextIOBase
     threads: int
+    log: bool
     statements: List[Statement]
 
-    def __init__(self, fs: FileSystem, src: TextIOBase, out: TextIOBase = sys.stdout, threads: int = 4) -> None:
+    def __init__(self, fs: FileSystem, src: TextIOBase, out: TextIOBase = sys.stdout, log: bool = False,
+                 threads: int = 4) -> None:
         self.fs = fs
         self.src = src
         self.threads = threads
         self.out = out
+        self.log = log
         self.statements = [
             self.parse(line.strip())
             for line in self.src.readlines()
@@ -34,7 +37,7 @@ class Interpreter:
 
         for f in factories:
             if f.command == statement.split()[0]:
-                return f(self.fs, statement, self.out)
+                return f(self.fs, statement, self.out, log=self.log)
 
         raise RuntimeError(f"Interpreter error: Invalid statement {statement}")
 

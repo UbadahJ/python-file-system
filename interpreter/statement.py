@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from io import TextIOBase
-from typing import Optional
+from typing import Optional, List
 
 from models import FileSystem
 
@@ -8,7 +8,8 @@ from models import FileSystem
 class Statement(ABC):
     fs: FileSystem
     statement: str
-    log: bool
+    args: Optional[List[str]] = None
+    log: bool = False
     out: Optional[TextIOBase] = None
 
     def __init__(self, fs: FileSystem, statement: str, out: Optional[TextIOBase] = None, log=False):
@@ -16,6 +17,10 @@ class Statement(ABC):
         self.statement = statement
         self.out = out
         self.log = log
+        try:
+            self.args = statement.split(maxsplit=1)[1].split(',')
+        except:
+            pass
         self.initialize()
 
     @property

@@ -2,7 +2,7 @@ from typing import List
 
 from interpreter.exception import InvalidStatement
 from interpreter.statement import Statement
-from models import Memory, File
+from models import File
 
 _file_store: List[File] = []
 
@@ -13,8 +13,7 @@ class OpenFile(Statement):
 
     def initialize(self) -> None:
         try:
-            args = self.statement.split()[1]
-            self.src = self.fs.current.open_file(*args.split(','))
+            self.src = self.fs.current.open_file(*self.args)
         except AssertionError as e:
             raise InvalidStatement(self, *e.args)
         except:
@@ -28,14 +27,13 @@ class OpenFile(Statement):
 
 
 class MemoryMap(Statement):
-    map: Memory
     command: str = 'show_memory_map'
 
     def initialize(self) -> None:
-        self.map = self.fs.memory_map()
+        pass
 
     def execute(self) -> None:
-        self.pprint(self.map.get_formatted_string())
+        self.pprint(self.fs.memory_map().get_formatted_string())
 
 
 class CloseFile(Statement):
@@ -44,8 +42,7 @@ class CloseFile(Statement):
 
     def initialize(self) -> None:
         try:
-            args = self.statement.split()
-            self.name = args[1]
+            self.name = self.args[0]
         except:
             raise InvalidStatement(self, "Invalid arguments")
 
@@ -68,8 +65,7 @@ class WriteToFile(Statement):
 
     def initialize(self) -> None:
         try:
-            args = self.statement.split(maxsplit=1)[1]
-            self.name, self.contents = args.split(',', maxsplit=1)
+            self.name, self.contents = self.args[0], ' '.join(self.args[1:])
         except:
             raise InvalidStatement(self, "Invalid arguments")
 

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import io
 import logging
 import pickle
 from typing import Optional
 
 from exttypes import asserttype, notnone
-from models import Node, Folder, File
+from models import Node, File
 from models.folder import Folder
 from models.memory import Memory
 
@@ -119,6 +120,5 @@ class FileSystem:
 
         return parent
 
-    @staticmethod
-    def memory_map() -> Memory:
-        return Memory('fs.dat')
+    def memory_map(self) -> Memory:
+        return Memory(io.BytesIO(pickle.dumps(self, 3)))
