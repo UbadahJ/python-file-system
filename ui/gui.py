@@ -138,6 +138,7 @@ class FileManager:
 
     def open_interpreter(self):
         def _clean() -> None:
+            self.fs.save()
             self.tree.delete(*self.tree.get_children())
             self.configure_tree()
 
