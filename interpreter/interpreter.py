@@ -1,7 +1,7 @@
 import sys
 from typing import Type, TextIO
 
-from interpreter.exception import InterpretionError
+from interpreter.exception import InterpretationError
 from interpreter.factory import *
 from models import FileSystem
 
@@ -23,7 +23,7 @@ class Interpreter:
             try:
                 if line.strip() != '':
                     self.statements.append(self.parse(line.strip()))
-            except InterpretionError as e:
+            except InterpretationError as e:
                 print(f'Error at line {i}: Syntax error\n{e.statement}', file=self.out)
                 exit(1)
 
@@ -41,7 +41,7 @@ class Interpreter:
             if f.command == statement.split()[0]:
                 return f(self.fs, statement, self.out, log=self.log)
 
-        raise InterpretionError(statement)
+        raise InterpretationError(statement)
 
     def launch(self):
         for i, s in enumerate(self.statements, start=1):

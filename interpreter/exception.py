@@ -12,7 +12,7 @@ class StatementError(SyntaxError):
         return f"Failed to parse {self.statement.statement}: {super().__repr__()}"
 
 
-class InterpretionError(SyntaxError):
+class InterpretationError(SyntaxError):
     statement: str
 
     def __init__(self, statement: str, *args: object) -> None:
