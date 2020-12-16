@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from interpreter.exception import StatementError
 from interpreter.statement import Statement
@@ -6,6 +6,17 @@ from models import File
 from models.file import Readable, Hybrid
 
 _file_store: List[File] = []
+
+
+def _open_file(statement: Statement, name: str) -> File:
+    _f_map: Dict[str, File] = {
+        f.name: f
+        for f in _file_store
+    }
+    if name not in _f_map:
+        raise StatementError(statement, "No such file opened")
+
+    return _f_map[name]
 
 
 class CreateFile(Statement):
@@ -91,15 +102,7 @@ class ReadFile(Statement):
             raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
-        _f_map = {
-            f.name: f
-            for f in _file_store
-        }
-        if self.name not in _f_map:
-            raise StatementError(self, "No such file opened")
-
-        src = _f_map[self.name]
-
+        src: File = _open_file(self, self.name)
         src.lock.acquire()
         self.pprint(f'Reading from {src.name}', is_log=True)
         if not isinstance(src, Readable) and not isinstance(src, Hybrid):
@@ -124,15 +127,7 @@ class WriteToFile(Statement):
             raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
-        _f_map = {
-            f.name: f
-            for f in _file_store
-        }
-        if self.name not in _f_map:
-            raise StatementError(self, "No such file opened")
-
-        src = _f_map[self.name]
-
+        src: File = _open_file(self, self.name)
         src.lock.acquire()
         self.pprint(f'Writing to {src.name}', is_log=True)
         if isinstance(src, Readable):
@@ -158,15 +153,7 @@ class TruncateFile(Statement):
             raise StatementError(self, "Invalid arguments")
 
     def execute(self) -> None:
-        _f_map = {
-            f.name: f
-            for f in _file_store
-        }
-        if self.name not in _f_map:
-            raise StatementError(self, "No such file opened")
-
-        src: File = _f_map[self.name]
-
+        src: File = _open_file(self, self.name)
         src.lock.acquire()
         self.pprint(f'Writing to {src.name}', is_log=True)
         src.truncate(self.end)
