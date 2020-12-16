@@ -32,6 +32,7 @@ class Interpreter:
             CreateFile,
             DeleteFile,
             OpenFile,
+            ReadFile,
             WriteToFile,
             CloseFile,
             TruncateFile,
