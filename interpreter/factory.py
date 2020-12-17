@@ -28,6 +28,7 @@ class CreateFolder(Statement):
 
     def execute(self) -> None:
         self.fs.lock.acquire()
+        self.pprint(f'Creating folder {self.args[0]}')
         self.fs.create_directory(self.args[0])
         self.fs.lock.release()
 
@@ -41,6 +42,7 @@ class DeleteFolder(Statement):
 
     def execute(self) -> None:
         self.fs.lock.acquire()
+        self.pprint(f'Deleting folder {self.args[0]}')
         self.fs.delete(self.args[0])
         self.fs.lock.release()
 
@@ -54,6 +56,7 @@ class ChangeFolder(Statement):
 
     def execute(self) -> None:
         self.fs.lock.acquire()
+        self.pprint(f'Changed folder from {self.fs.current.name} to {self.args[0]}')
         self.fs.change_directory(self.args[0])
         self.fs.lock.release()
 
@@ -67,6 +70,7 @@ class Move(Statement):
 
     def execute(self) -> None:
         self.fs.lock.acquire()
+        self.pprint(f'Moving {self.args[0]} to {self.args[1]}')
         self.fs.move(self.args[0], self.args[1])
         self.fs.lock.release()
 
@@ -95,6 +99,7 @@ class DeleteFile(FileStatement):
             for f in _file_store
         ]: raise StatementError(self, "File is opened")
 
+        self.pprint(f'Deleting file {self.args[0]}')
         self.fs.current.delete_file(self.args[0])
 
 
@@ -216,7 +221,7 @@ class TruncateFile(FileStatement):
         super().execute()
         src: File = _open_file(self, self.name)
         src.lock.acquire()
-        self.pprint(f'Writing to {src.name}', is_log=True)
+        self.pprint(f'Truncating {src.name}', is_log=True)
         src.truncate(self.end)
         src.lock.release()
 
