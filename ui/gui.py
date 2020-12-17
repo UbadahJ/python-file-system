@@ -142,7 +142,7 @@ class FileManager:
             self.tree.delete(*self.tree.get_children())
             self.configure_tree()
 
-        InterpreterView(Toplevel(self.root), self.fs, _clean)
+        InterpreterConfig(Toplevel(self.root), self.fs, _clean)
 
     def _load_nodes(self, parent: Node, nodes: Dict[str, Node]):
         for _, node in nodes.items():
@@ -230,6 +230,52 @@ class MemoryView:
         self.text.config(state=DISABLED)
 
 
+class InterpreterConfig:
+    fs: FileSystem
+    top: Toplevel
+    root: Toplevel
+    entry: Entry
+    log_check: ttk.Checkbutton
+    out_check: ttk.Checkbutton
+    launch_btn: Button
+    on_complete: Optional[Callable[[None], None]] = None
+
+    def __init__(self, top: Toplevel, fs: FileSystem, on_complete: Optional[Callable[[None], None]] = None) -> None:
+        self.top = top
+        self.root = Toplevel(top)
+        self.fs = fs
+        self.on_complete = on_complete
+        self.entry = Entry(self.root)
+        self.log_check = ttk.Checkbutton(self.root, text='Enable each command logging')
+        self.out_check = ttk.Checkbutton(self.root, text='Save thread output to disk')
+        self.launch_btn = Button(self.root, text='Launch', command=self.launch)
+
+        self.init_view()
+
+    def init_view(self) -> None:
+        self.root.title(f'Interpreter Config')
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+        Label(self.root, text='Enter files separated by comma\nEach file is executed in new thread') \
+            .grid(column=0, row=0, sticky=(N, W, E))
+        self.entry.grid(column=0, row=1, sticky=(N, W, E))
+        self.log_check.grid(column=0, row=2, sticky=(N, W, E))
+        self.out_check.grid(column=0, row=3, sticky=(N, W, E))
+        self.launch_btn.grid(column=0, row=4, sticky=(N, W, E))
+        self.log_check.state('!selected')
+        self.out_check.state('!selected')
+
+    def launch(self) -> None:
+        log.debug(self.log_check['state'], self.out_check['state'])
+        InterpreterView(
+            self.top, self.fs, self.entry.get(),
+            self.log_check.instate(['selected']),
+            self.out_check.instate(['selected']),
+            self.on_complete
+        )
+        self.root.destroy()
+
+
 class InterpreterView:
     fs: FileSystem
     root: Toplevel
@@ -237,15 +283,21 @@ class InterpreterView:
     interpreters: List[Interpreter]
     on_complete: Optional[Callable[[None], None]] = None
 
-    def __init__(self, top: Toplevel, fs: FileSystem, on_complete: Optional[Callable[[None], None]] = None) -> None:
+    def __init__(
+            self,
+            top: Toplevel,
+            fs: FileSystem,
+            contents: Optional[str],
+            verbose: bool,
+            out: bool,
+            on_complete: Optional[Callable[[None], None]] = None,
+    ) -> None:
         self.fs = fs
         self.root = top
         self.text = Text(top)
         self.on_complete = on_complete
+        self.out = out
 
-        contents: Optional[str] = simpledialog.askstring(
-            title='Open', prompt='Enter files separated by comma\nEach file is executed in new thread'
-        )
         if contents is None or contents == '':
             self.root.destroy()
             return
@@ -255,7 +307,7 @@ class InterpreterView:
             for file in contents.split(',')
         ]
         self.interpreters = [
-            Interpreter(self.fs, file, out=io)
+            Interpreter(self.fs, file, out=io, log=verbose)
             for io, file in files
         ]
 
@@ -282,6 +334,11 @@ class InterpreterView:
             self.text.insert('end', f'End of thread {index}\n')
 
         self.text['state'] = DISABLED
+        if self.out:
+            for index, i in enumerate(self.interpreters, start=1):
+                i.out.seek(0)
+                with open(f'out_thread{index}.txt', 'w') as f:
+                    f.write(i.out.read())
 
         if self.on_complete is not None:
             self.on_complete()
