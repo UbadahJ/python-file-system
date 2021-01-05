@@ -11,7 +11,9 @@ class RemoteFolder(Folder):
     conn: Callable[[], Connection]
 
     def __init__(self, conn: Callable[[], Connection], folder: Folder) -> None:
-        super().__init__(folder.name, folder.parent, folder.nodes)
+        super().__init__(folder.name,
+                         asserttype(Folder, folder.parent) if folder.parent is not None else None,
+                         folder.nodes)
         self.conn = conn
 
     def create_file(self, name: str) -> None:
@@ -20,7 +22,7 @@ class RemoteFolder(Folder):
 
     def open_file(self, name: str, mode: str = 'r') -> File:
         with self.conn() as soc:
-            send_request(soc, encode_parameter('fs', 'open_file', self.path(), name))
+            send_request(soc, encode_parameter('fs', 'open_file', self.path(), name, mode))
             return RemoteFile(self.conn, asserttype(File, pickle.loads(get_request(soc))))
 
     def delete_file(self, name: str) -> None:

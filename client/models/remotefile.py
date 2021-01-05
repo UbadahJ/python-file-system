@@ -1,8 +1,9 @@
+import pickle
 from typing import Union, Callable
 
 from client.models.connection import Connection
 from models import File
-from network.network import send_request, encode_parameter, get_request, decode_parameter
+from network.network import send_request, encode_parameter, get_request
 
 
 class RemoteFile(File):
@@ -17,20 +18,37 @@ class RemoteFile(File):
 
     def _write(self, contents: str, start: int = 0, append: bool = False) -> None:
         with self.conn() as soc:
-            send_request(soc, encode_parameter('fs', 'write_file', self.path(), contents, str(start), str(append)))
+            send_request(soc, encode_parameter(
+                'fs', 'write_contents', self.parent.path(), self.name, contents, str(start), str(append)
+            ))
 
     def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
         with self.conn() as soc:
-            send_request(soc, encode_parameter('fs', 'read_file', self.path(), str(start), str(end)))
-            return ''.join(decode_parameter(get_request(soc)))
+            send_request(soc, encode_parameter(
+                'fs', 'read_contents', self.parent.path(), self.name, str(start), str(end)
+            ))
+            return ''.join(pickle.loads(get_request(soc)))
 
     def move(self, start: int, end: int, target: int) -> None:
         with self.conn() as soc:
-            send_request(soc, encode_parameter('fs', 'move_file', self.path(), str(start), str(end), str(target)))
+            send_request(soc, encode_parameter(
+                'fs', 'move_contents', self.parent.path(), self.name, str(start), str(end), str(target)
+            ))
 
     def truncate(self, end: int) -> None:
         with self.conn() as soc:
-            send_request(soc, encode_parameter('fs', 'write_file', self.path(), str(end)))
+            send_request(soc, encode_parameter(
+                'fs', 'truncate_contents', self.parent.path(), self.name, str(end)
+            ))
 
     def close(self):
         pass
+
+    @property
+    def content(self) -> str:
+        return self.read()
+
+    @content.setter
+    def content(self, value: str) -> None:
+        self.truncate(0)
+        self.write(value)

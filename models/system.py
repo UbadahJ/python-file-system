@@ -38,7 +38,7 @@ class FileSystem:
 
     def change_directory(self, path: str) -> Folder:
         log.debug(f'change_directory: path = {path}')
-        self.current = self._get_folder(path)
+        self.current = self.get_folder(path)
         return self.current
 
     def create_directory(self, path: str) -> None:
@@ -50,7 +50,7 @@ class FileSystem:
 
     def move(self, src: str, dest: str) -> None:
         log.debug(f'move_directory: src = {src} => dest = {dest}')
-        _src, _dest = self._get_node(src), self._get_folder(dest)
+        _src, _dest = self._get_node(src), self.get_folder(dest)
         asserttype(Folder, _src.parent).nodes.pop(_src.name)
         _src.parent = _dest
         _dest.nodes[_src.name] = _src
@@ -76,7 +76,7 @@ class FileSystem:
             [p for p in path.split('/') if p != ''][-1]
         ]
 
-    def _get_folder(self, path) -> Folder:
+    def get_folder(self, path) -> Folder:
         def resolve_folder() -> Folder:
             return self.current if folder is None else folder
 
@@ -118,7 +118,7 @@ class FileSystem:
             _path[0] = '/' + _path[0]
 
         if len(_path) > 1:
-            parent = self._get_folder(_path[0])
+            parent = self.get_folder(_path[0])
 
         return parent
 

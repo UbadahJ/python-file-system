@@ -61,7 +61,7 @@ class FileManager:
         log.debug(f'Opening file => {path}, {name}')
         parent = self.fs.change_directory('/' + path)
         if isinstance(parent.nodes[name], File):
-            Notepad(Toplevel(self.root), self.fs, asserttype(File, parent.nodes[name]))
+            Notepad(Toplevel(self.root), self.fs, parent.open_file(name, 'rw'))
 
     def new_file(self):
         if len(self.tree.selection()) < 1:
@@ -180,7 +180,7 @@ class Notepad:
         self.root['menu'] = self.menu
         self.text.grid(column=0, row=0, sticky=(N, W, E, S))
 
-        self.text.insert('1.0', self.file.contents)
+        self.text.insert('1.0', self.file.read())
         self.configure_menu()
 
     def configure_menu(self):
@@ -192,16 +192,17 @@ class Notepad:
         file.add_command(label='Exit', command=lambda: exit(0))
 
     def save_file(self):
-        self.file.contents = self.text.get('1.0', 'end')
+        self.file.truncate(0)
+        self.file.write(self.text.get('1.0', 'end'))
         self.fs.save()
 
     def truncate(self):
         size = simpledialog.askinteger(title='Number of bytes', prompt='Enter number of bytes')
-        if size is not None and int(size) < len(self.file.contents):
+        if size is not None and int(size) < len(self.file.read()):
             log.debug(f'Truncating file: {self.file.name}')
             self.file.truncate(int(size))
             self.text.delete('1.0', 'end')
-            self.text.insert('1.0', self.file.contents)
+            self.text.insert('1.0', self.file.read())
         else:
             messagebox.showerror(title='Error', message='Invalid number entered')
 
