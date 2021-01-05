@@ -10,7 +10,7 @@ class RemoteFile(File):
     conn: Callable[[], Connection]
 
     def __init__(self, conn: Callable[[], Connection], file: File) -> None:
-        super().__init__(file.name, file.parent, file.contents)
+        super().__init__(file.name, file.parent, file.read())
         self.conn = conn
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:
@@ -44,11 +44,3 @@ class RemoteFile(File):
     def close(self):
         pass
 
-    @property
-    def content(self) -> str:
-        return self.read()
-
-    @content.setter
-    def content(self, value: str) -> None:
-        self.truncate(0)
-        self.write(value)

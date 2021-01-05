@@ -13,7 +13,11 @@ class File(Node):
         self.contents = contents
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:
-        self._write(contents, start)
+        # A small issue while adding the type signatures
+        # The protected method only support str but the public supports
+        # the union of str and bytes
+        # TODO: Fix this mess
+        self._write(str(contents), start)
 
     def _write(self, contents: str, start: int = 0, append: bool = False) -> None:
         self.contents = self.contents[:start + 1] + \
@@ -39,7 +43,7 @@ class Readable(File):
     file: Optional[File]
 
     def __init__(self, file: File):
-        super().__init__(file.name, file.parent, file.contents)
+        super().__init__(file.name, file.parent, file.read())
         self.file = file
 
     def read(self, start: int = 0, end: int = -1) -> Union[str, bytes]:
@@ -62,7 +66,7 @@ class Writeable(File):
     file: Optional[File]
 
     def __init__(self, file: File):
-        super().__init__(file.name, file.parent, file.contents)
+        super().__init__(file.name, file.parent, file.read())
         self.file = file
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:
@@ -85,7 +89,7 @@ class Appendable(File):
     file: Optional[File]
 
     def __init__(self, file: File):
-        super().__init__(file.name, file.parent, file.contents)
+        super().__init__(file.name, file.parent, file.read())
         self.file = file
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:
@@ -108,7 +112,7 @@ class Hybrid(File):
     file: Optional[File]
 
     def __init__(self, file: File):
-        super().__init__(file.name, file.parent, file.contents)
+        super().__init__(file.name, file.parent, file.read())
         self.file = file
 
     def write(self, contents: Union[str, bytes], start: int = 0) -> None:

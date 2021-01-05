@@ -28,7 +28,9 @@ class Folder(Node):
 
                 raise IOError("No such file")
 
-            self.create_file(name)
+            if name not in self.nodes:
+                self.create_file(name)
+
             if mode == 'w':
                 return Writeable(asserttype(File, self.nodes[name]))
             elif mode == 'a':

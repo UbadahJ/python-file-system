@@ -155,7 +155,7 @@ class FileManager:
             else:
                 self.tree.insert(parent.path(), 'end', node.path(), text=node.name, tags=('file', node.path()))
                 self.tree.set(node.path(), 'type', 'file')
-                self.tree.set(node.path(), 'size', f'{len(asserttype(File, node).contents)} bytes')
+                self.tree.set(node.path(), 'size', f'{len(asserttype(File, node).read())} bytes')
 
 
 class Notepad:
