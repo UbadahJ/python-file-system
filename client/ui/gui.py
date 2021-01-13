@@ -3,6 +3,8 @@ from tkinter import Tk, Entry, Button, Label, N, W, E, messagebox, S
 from traceback import print_exception
 
 from client.models.remotesystem import RemoteFileSystem
+from models.auth import Authentication
+from services.authservice import AuthService
 from ui.gui import FileManager
 
 
@@ -40,8 +42,10 @@ class ClientConfig:
         if self.verify():
             ip = self.ip_entry.get()
             port = int(self.port_entry.get())
+            name = self.name_entry.get()
             self.root.destroy()
             try:
+                AuthService.init(Authentication(name))
                 FileManager(RemoteFileSystem(ip, port))
             except Exception as e:
                 print_exception(e, Exception, sys.stderr)
