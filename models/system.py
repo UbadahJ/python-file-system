@@ -10,6 +10,8 @@ from exttypes import asserttype, notnone
 from models import Node, File
 from models.folder import Folder
 from models.memory import Memory
+from models.runmem import RuntimeMemory
+from services.memservice import MemoryService
 
 log = logging.getLogger('FileSystem')
 
@@ -20,7 +22,7 @@ class FileSystem:
     lock: Lock = Lock()
 
     @staticmethod
-    def load() -> FileSystem:
+    def load(memory: RuntimeMemory = RuntimeMemory()) -> FileSystem:
         fs: FileSystem
         try:
             with open('fs.dat', 'rb') as f:
@@ -30,6 +32,7 @@ class FileSystem:
             fs = FileSystem(Folder('root', None))
             fs.save()
 
+        MemoryService.init(memory)
         return fs
 
     def __init__(self, root: Folder) -> None:

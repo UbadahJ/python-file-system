@@ -8,8 +8,10 @@ from typing import Dict, Optional, List, Callable
 from exttypes import asserttype
 from interpreter.interpreter import Interpreter
 from models import FileSystem, Node, Folder, File, Memory
+from services.memservice import MemoryService
 
 log = logging.getLogger('Gui')
+MAX_OPENED_FILES = 5
 
 
 class FileManager:
@@ -171,6 +173,13 @@ class Notepad:
         self.root = top
         self.menu = Menu(self.root)
         self.text = Text(self.root)
+
+        MemoryService.fetch_memory().open(file)
+        if len(MemoryService.fetch_memory()) > MAX_OPENED_FILES:
+            messagebox.showerror(f'Error opening {self.file.name}',
+                                 f'Exceeded max opened files limit {MAX_OPENED_FILES}')
+            self.root.destroy()
+
         self.init_view()
 
     def init_view(self):
@@ -189,7 +198,7 @@ class Notepad:
         self.menu.add_cascade(menu=file, label='File')
         file.add_command(label='Save', command=self.save_file)
         file.add_command(label='Truncate', command=self.truncate)
-        file.add_command(label='Exit', command=lambda: exit(0))
+        file.add_command(label='Exit', command=self.close)
 
     def save_file(self):
         self.file.truncate(0)
@@ -207,6 +216,10 @@ class Notepad:
             messagebox.showerror(title='Error', message='Invalid number entered')
 
         self.fs.save()
+
+    def close(self):
+        MemoryService.fetch_memory().close(self.file)
+        self.root.destroy()
 
 
 class MemoryView:
